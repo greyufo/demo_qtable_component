@@ -7,13 +7,14 @@
       :data="data"
       :columns="columns"
       row-key="name"
+      class="table-resizable"
     >
     </q-table>
 
 </template>
 
 <script>
-
+import $ from 'jquery'
 export default {
   name: 'MyTable',
   props: {
@@ -37,20 +38,48 @@ export default {
 
   },
   mounted () {
-    if (this.$props.resizableColumns) { this.startResize() }
-  },
+    // if (this.$props.resizableColumns) { this.startResize() }
+    console.log($(document))
+  }
+  /*
   methods: {
     startResize () {
-      // const tableElem = document.querySelector('.q-table')
-      console.log()
+      // const tableEl = document.querySelector('.q-table')
+      // tableEl.addEventListener('mousemove', this.startEvent, false)
+      // console.log(tableEl)
     }
-  }
+  },
+  startEvent (event) {
+    // console.log(2)
+  } */
 
 }
 </script>
 <style>
-.my_table table {
-    color:blue !important;
 
+.table-resizable.resizing, .table-resizable th::before {
+  cursor: col-resize;
+  user-select: none;
+}
+.table-resizable th {
+  position: relative;
+}
+.table-resizable th::before {
+  content: "";
+  display: block;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 1em;
+}
+.table-resizable th:last-of-type::before {
+  display: none;
+}
+.table-resizable td {
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
