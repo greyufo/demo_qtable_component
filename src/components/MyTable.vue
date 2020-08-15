@@ -50,12 +50,17 @@ export default {
 
   methods: {
     resize () {
+      document.addEventListener('mousemove', function (e) {
+        if (pressed) {
+          $handle.width(startWidth + (event.pageX - startX))
+        }
+      })
       $(document).on({
-        mousemove: function (event) {
+      /*   mousemove: function (event) {
           if (pressed) {
             $handle.width(startWidth + (event.pageX - startX))
           }
-        },
+        }, */
         mouseup: function () {
           if (pressed) {
             $table.removeClass('resizing')
