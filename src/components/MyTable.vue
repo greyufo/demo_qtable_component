@@ -50,28 +50,28 @@ export default {
 
   methods: {
     resize () {
-      console.log(startX)
       $(document).on({
-        mousemove: (event) => {
+        mousemove: function (event) {
           if (pressed) {
             $handle.width(startWidth + (event.pageX - startX))
           }
         },
-        mouseup: () => {
+        mouseup: function () {
           if (pressed) {
             $table.removeClass('resizing')
             pressed = false
           }
         }
-      }).on('mousedown', '.table-resizable th', (event) => {
+      }).on('mousedown', '.table-resizable th', function (event) {
         $handle = $(this)
         pressed = true
         startX = event.pageX
         startWidth = $handle.width()
 
         $table = $handle.closest('.table-resizable').addClass('resizing')
-      }).on('dblclick', '.table-resizable thead', () =>
-        $(this).find('th[style]').css('width', ''))
+      }).on('dblclick', '.table-resizable thead', function () {
+        $(this).find('th[style]').css('width', '')
+      })
     }
   }
 
@@ -85,7 +85,7 @@ export default {
 }
 .table-resizable th {
   position: relative;
-  max-width: 0;
+   max-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
