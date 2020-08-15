@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-
 <template>
 
  <q-table
@@ -16,7 +14,6 @@
 </template>
 
 <script>
-import $ from 'jquery'
 var startX,
   startWidth,
   $handle,
@@ -52,30 +49,30 @@ export default {
     resize () {
       document.addEventListener('mousemove', function (e) {
         if (pressed) {
-          $handle.width(startWidth + (event.pageX - startX))
+          $handle.style.width = startWidth + (e.pageX - startX) + 'px'
         }
       })
-      $(document).on({
-      /*   mousemove: function (event) {
-          if (pressed) {
-            $handle.width(startWidth + (event.pageX - startX))
-          }
-        }, */
-        mouseup: function () {
-          if (pressed) {
-            $table.removeClass('resizing')
-            pressed = false
-          }
+      document.addEventListener('mouseup', function (e) {
+        if (pressed) {
+          $table.classList.remove('resizing')
+          pressed = false
         }
-      }).on('mousedown', '.table-resizable th', function (event) {
-        $handle = $(this)
-        pressed = true
-        startX = event.pageX
-        startWidth = $handle.width()
-
-        $table = $handle.closest('.table-resizable').addClass('resizing')
-      }).on('dblclick', '.table-resizable thead', function () {
-        $(this).find('th[style]').css('width', '')
+      })
+      const thList = document.querySelectorAll('.table-resizable th')
+      thList.forEach(th => {
+        th.addEventListener('mousedown', function (e) {
+          $handle = this
+          pressed = true
+          startX = e.pageX
+          startWidth = $handle.offsetWidth
+          $table = $handle.closest('.table-resizable')
+          $table.classList.add('resizing')
+        }, true)
+      })
+      document.querySelector('.table-resizable thead').addEventListener('dblclick', function (e) {
+        thList.forEach(th => {
+          th.style.width = ''
+        })
       })
     }
   }
