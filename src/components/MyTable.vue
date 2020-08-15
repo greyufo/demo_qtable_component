@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+
 <template>
 
  <q-table
@@ -15,6 +17,11 @@
 
 <script>
 import $ from 'jquery'
+var startX,
+  startWidth,
+  $handle,
+  $table,
+  pressed = false
 export default {
   name: 'MyTable',
   props: {
@@ -38,23 +45,37 @@ export default {
 
   },
   mounted () {
-    // if (this.$props.resizableColumns) { this.startResize() }
-    console.log($(document))
-  }
-  /*
-  methods: {
-    startResize () {
-      // const tableEl = document.querySelector('.q-table')
-      // tableEl.addEventListener('mousemove', this.startEvent, false)
-      // console.log(tableEl)
-    }
+    this.resize()
   },
-  startEvent (event) {
-    // console.log(2)
-  } */
+
+  methods: {
+    resize () {
+      console.log(startX)
+      $(document).on({
+        mousemove: (event) => {
+          if (pressed) {
+            $handle.width(startWidth + (event.pageX - startX))
+          }
+        },
+        mouseup: () => {
+          if (pressed) {
+            $table.removeClass('resizing')
+            pressed = false
+          }
+        }
+      }).on('mousedown', '.table-resizable th', (event) => {
+        $handle = $(this)
+        pressed = true
+        startX = event.pageX
+        startWidth = $handle.width()
+
+        $table = $handle.closest('.table-resizable').addClass('resizing')
+      }).on('dblclick', '.table-resizable thead', () =>
+        $(this).find('th[style]').css('width', ''))
+    }
+  }
 
 }
-// https://codepen.io/jasongardner/pen/QNOXym
 </script>
 <style>
 
@@ -64,6 +85,10 @@ export default {
 }
 .table-resizable th {
   position: relative;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .table-resizable th::before {
   content: "";
