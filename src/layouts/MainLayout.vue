@@ -2,8 +2,6 @@
 <div id="q-app">
   <div class="q-pa-md">
     <my-table
-      title="Treats"
-      resizableColumns
       :separator='separator'
       :data="data"
       :columns="columns"
