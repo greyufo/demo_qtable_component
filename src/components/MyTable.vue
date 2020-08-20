@@ -1,5 +1,5 @@
 <template>
-<q-layout view="lhh LpR lff" container style="height: 500px" class="shadow-1 rounded-borders">
+<q-layout view="lhh LpR lff" container style="height: 1080px" class="shadow-1 rounded-borders">
  <q-table
       dense
       :separator='separator'
@@ -8,15 +8,46 @@
       :selected.sync="selectedRows"
       selection="multiple"
       row-key="name"
-      class="table-resizable"
+      class="table-resizable my-sticky-header-table"
+      :pagination.sync="pagination"
+      hide-pagination
     >
-  <template v-slot:top>
+  <template v-slot:top-left>
           <q-input  dense debounce="300" color="primary" v-model="filter">
             <template v-slot:append>
               <q-icon name="search" ></q-icon>
             </template>
           </q-input>
   </template>
+  <template v-slot:top-right>
+  <q-btn-dropdown
+      icon="menu_open"
+      v-model="menu"
+      class="glossy q-ml-lg"
+      color="primary"
+      label="Команды"
+    >
+      <q-list>
+        <q-item clickable v-close-popup @click="onItemClick">
+          <q-item-section avatar>
+            <q-avatar icon="folder" color="primary" text-color="white"></q-avatar>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Photos</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item clickable v-close-popup @click="onItemClick">
+          <q-item-section avatar>
+            <q-avatar icon="assignment" color="secondary" text-color="white"></q-avatar>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Vacation</q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </q-btn-dropdown>
+ </template>
  <template v-slot:header="props">
         <q-tr :props="props">
           <q-th align="left" style="max-width:none;width:50px">
@@ -38,6 +69,15 @@
           </q-tr>
         </template>
     </q-table>
+      <div class="row justify-center q-mt-md">
+      <q-pagination
+        v-model="pagination.page"
+        color="grey-8"
+        :max="pagesNumber"
+        size="md">
+      </q-pagination>
+     </div>
+<!--
       <q-page-sticky position="top-right" :offset="[0, 0]">
         <div>
            <q-tooltip anchor="center left" self="center right" :delay="1000">
@@ -77,8 +117,9 @@
 
           </q-fab>
            </div>
-
           </q-page-sticky>
+
+-->
 </q-layout>
 </template>
 
@@ -91,6 +132,10 @@ var startX,
 export default {
   name: 'MyTable',
   props: {
+    resizableColumns: {
+      type: Boolean,
+      default: true
+    },
     separator: {
       type: String
     },
@@ -108,9 +153,20 @@ export default {
   data () {
     return {
       selectedRows: [],
-      resizableColumns: false,
       filter: '',
-      show_dialog: false
+      show_dialog: false,
+      pagination: {
+        sortBy: 'desc',
+        descending: false,
+        page: 2,
+        rowsPerPage: 3,
+        rowsNumber: 20
+      }
+    }
+  },
+  computed: {
+    pagesNumber () {
+      return Math.ceil(this.data.length / this.pagination.rowsPerPage)
     }
   },
   mounted () {
@@ -155,7 +211,6 @@ export default {
 }
 </script>
 <style>
-
 .table-resizable.resizing, .table-resizable th::before {
   cursor: col-resize;
   user-select: none;
@@ -185,4 +240,27 @@ export default {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.my-sticky-header-table {
+  /* height or max-height is important */
+  height: 450px;
+  /* this is when the loading indicator appears */
+}
+.my-sticky-header-table .q-table__top,
+.my-sticky-header-table .q-table__bottom,
+.my-sticky-header-table thead tr:first-child th {
+  /* bg color is important for th; just specify one */
+  background-color: #c1f4cd;
+}
+.my-sticky-header-table thead tr th {
+  position: sticky;
+  z-index: 1;
+}
+.my-sticky-header-table thead tr:first-child th {
+  top: 0;
+}
+.my-sticky-header-table.q-table--loading thead tr:last-child th {
+  /* height of all previous header rows */
+  top: 100px;
+}
+
 </style>
