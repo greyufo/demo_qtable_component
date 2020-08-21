@@ -5,6 +5,7 @@
       :separator='separator'
       :data="data"
       :columns="columns"
+      :visible-columns="visibleColumns"
       :selected.sync="selectedRows"
       selection="multiple"
       row-key="name"
@@ -20,37 +21,95 @@
           </q-input>
   </template>
   <template v-slot:top-right>
+  <q-btn color="secondary" icon="add" @click='newItem' label="Добавить" />
+   <q-btn-dropdown
+      v-show = "show_settings"
+      icon="settings"
+      class="glossy q-ml-lg"
+      color="green"
+      label="Настройка"
+    >
+     <q-list>
+        <q-item clickable v-close-popup @click="saveSettings">
+          <q-item-section avatar>
+            <q-avatar  icon = "save" color="green" text-color="white"/>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Сохранить настройки</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item clickable v-close-popup @click="onResizible">
+          <q-item-section avatar>
+            <q-avatar  icon = "multiple_stop" color="blue" text-color="white"/>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Включить изменение ширины</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-separator spaced />
+        <q-item-label header >
+                Список столбцов
+              </q-item-label>
+        <q-item v-for="(col,key) in columns" :key="key">
+        <q-item-section>
+        <q-checkbox size="sm" :val="col.name" :label="col.label" v-model = "visibleColumns"/>
+        </q-item-section>
+      </q-item>
+      </q-list>
+  </q-btn-dropdown>
   <q-btn-dropdown
       icon="menu_open"
-      v-model="menu"
       class="glossy q-ml-lg"
       color="primary"
       label="Команды"
     >
       <q-list>
-        <q-item clickable v-close-popup @click="onItemClick">
+        <q-item clickable v-close-popup @click="setSelectable">
           <q-item-section avatar>
-            <q-avatar icon="folder" color="primary" text-color="white"></q-avatar>
+            <q-avatar :icon = "icon_check_box" color="blue" text-color="white"/>
           </q-item-section>
           <q-item-section>
-            <q-item-label>Photos</q-item-label>
+            <q-item-label>Групповые операции</q-item-label>
           </q-item-section>
         </q-item>
-
-        <q-item clickable v-close-popup @click="onItemClick">
+        <q-item :disable="!deletable" clickable v-close-popup @click="deleteItem">
           <q-item-section avatar>
-            <q-avatar icon="assignment" color="secondary" text-color="white"></q-avatar>
+            <q-avatar icon="delete" color="red" text-color="white"/>
           </q-item-section>
           <q-item-section>
-            <q-item-label>Vacation</q-item-label>
+            <q-item-label>Удалить запись</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item  clickable v-close-popup @click="exportTable" a>
+          <q-item-section avatar>
+            <q-avatar icon="cloud_download" color="orange" text-color="white"/>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Экспортировать таблицу</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item clickable v-close-popup @click="printTable">
+          <q-item-section avatar>
+            <q-avatar icon="print" color="grey" text-color="white"/>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Печать таблицы</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item clickable v-close-popup @click="settingsTable">
+          <q-item-section avatar>
+            <q-avatar icon="settings" color="green" text-color="white"/>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Настройка таблицы</q-item-label>
           </q-item-section>
         </q-item>
       </q-list>
     </q-btn-dropdown>
  </template>
- <template v-slot:header="props">
+ <template  v-slot:header="props">
         <q-tr :props="props">
-          <q-th align="left" style="max-width:none;width:50px">
+          <q-th v-show="selectable" align="left" style="max-width:none;width:50px">
             <q-checkbox v-model="props.selected" >
               <q-tooltip anchor="center left" self="center right" :delay="1000">
               Снять/установить выделения на текущей странице
@@ -64,7 +123,7 @@
       </template>
        <template v-slot:body="props">
           <q-tr :props="props">
-            <q-td><q-checkbox v-model="props.selected"></q-checkbox></q-td>
+            <q-td v-show="selectable"><q-checkbox v-model="props.selected"/></q-td>
             <q-td v-for="(cell,key) in props.row" :props="props" :key="key" >{{cell}}</q-td>
           </q-tr>
         </template>
@@ -131,39 +190,23 @@ var startX,
   pressed = false
 export default {
   name: 'MyTable',
-  props: {
-    resizableColumns: {
-      type: Boolean,
-      default: true
-    },
-    separator: {
-      type: String
-    },
-
-    data: {
-      type: Array,
-      default: () => []
-    },
-    columns: {
-      type: Array,
-      default: () => []
+  data: () => ({
+    selectedRows: [],
+    visibleColumns: [],
+    filter: '',
+    show_settings: false,
+    show_dialog: false,
+    deletable: false,
+    selectable: true,
+    icon_check_box: 'check_box',
+    pagination: {
+      sortBy: 'desc',
+      descending: false,
+      page: 2,
+      rowsPerPage: 5
+      // rowsNumber: 20
     }
-
-  },
-  data () {
-    return {
-      selectedRows: [],
-      filter: '',
-      show_dialog: false,
-      pagination: {
-        sortBy: 'desc',
-        descending: false,
-        page: 2,
-        rowsPerPage: 3,
-        rowsNumber: 20
-      }
-    }
-  },
+  }),
   computed: {
     pagesNumber () {
       return Math.ceil(this.data.length / this.pagination.rowsPerPage)
@@ -171,11 +214,41 @@ export default {
   },
   mounted () {
     if (this.resizableColumns) { this.resize() }
+    this.visibleColumns = this.columns.map(e => e.name)
   },
-
+  watch: {
+    selectedRows: function (val) {
+      this.deletable = val.length > 0
+    },
+    selectable: function (val) {
+      this.icon_check_box = !val ? 'check_box' : 'check_box_outline_blank'
+      if (!val) this.selectedRows = []
+    }
+  },
   methods: {
-    onClick () {
-
+    newItem () {
+      console.log('Новая запись')
+    },
+    deleteItem () {
+      console.log('Удалить запись')
+    },
+    printTable () {
+      console.log('Печать таблицы')
+    },
+    exportTable () {
+      console.log('Экспорт таблицы')
+    },
+    settingsTable () {
+      this.show_settings = !this.show_settings
+    },
+    setSelectable () {
+      this.selectable = !this.selectable
+    },
+    onResizible () {
+      console.log('Изменение столбцов')
+    },
+    saveSettings () {
+      console.log('Сохраняем настройки')
     },
     resize () {
       document.addEventListener('mousemove', function (e) {
@@ -206,23 +279,49 @@ export default {
         })
       })
     }
+  },
+  props: {
+    resizableColumns: {
+      type: Boolean,
+      default: true
+    },
+    separator: {
+      type: String
+    },
+    visColumns:
+    {
+      type: Array,
+      default: () => []
+    },
+    data: {
+      type: Array,
+      default: () => []
+    },
+    columns: {
+      type: Array,
+      default: () => []
+    }
+
   }
 
 }
 </script>
+
 <style>
-.table-resizable.resizing, .table-resizable th::before {
+.table-resizable.resizing {
   cursor: col-resize;
   user-select: none;
 }
 .table-resizable th {
   position: relative;
-   max-width: 0;
+  max-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .table-resizable th::before {
+  cursor: col-resize;
+  user-select: none;
   content: "";
   display: block;
   height: 100%;
@@ -249,7 +348,7 @@ export default {
 .my-sticky-header-table .q-table__bottom,
 .my-sticky-header-table thead tr:first-child th {
   /* bg color is important for th; just specify one */
-  background-color: #c1f4cd;
+  background-color: #efefef;
 }
 .my-sticky-header-table thead tr th {
   position: sticky;
