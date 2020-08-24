@@ -2,6 +2,7 @@
 <q-layout view="lhh LpR lff" container style="height: 1080px" class="shadow-1 rounded-borders">
  <q-table
       dense
+      :sortable = "sortable"
       :separator='separator'
       :data="data"
       :columns="columns"
@@ -109,7 +110,8 @@
  </template>
  <template  v-slot:header="props">
         <q-tr :props="props">
-          <q-th v-show="selectable" align="left" style="max-width:none;width:50px">
+          <!-- max-width:none обязательно для чекбосов в первом столбце, чтобы плотнее были -->
+          <q-th v-show="selectable" align="left" class="unresisible" style="max-width:none;width:1px">
             <q-checkbox v-model="props.selected" >
               <q-tooltip anchor="center left" self="center right" :delay="1000">
               Снять/установить выделения на текущей странице
@@ -193,11 +195,13 @@ export default {
   data: () => ({
     selectedRows: [],
     visibleColumns: [],
+    resizableColumns: false,
+    sortable: false,
     filter: '',
     show_settings: false,
     show_dialog: false,
     deletable: false,
-    selectable: true,
+    selectable: false,
     icon_check_box: 'check_box',
     pagination: {
       sortBy: 'desc',
@@ -213,10 +217,13 @@ export default {
     }
   },
   mounted () {
-    if (this.resizableColumns) { this.resize() }
     this.visibleColumns = this.columns.map(e => e.name)
   },
   watch: {
+    resizableColumns: function (val) {
+      if (val) this.setResizable()
+    },
+
     selectedRows: function (val) {
       this.deletable = val.length > 0
     },
@@ -245,46 +252,63 @@ export default {
       this.selectable = !this.selectable
     },
     onResizible () {
+      this.resizableColumns = true
       console.log('Изменение столбцов')
     },
     saveSettings () {
       console.log('Сохраняем настройки')
     },
-    resize () {
-      document.addEventListener('mousemove', function (e) {
-        if (pressed) {
-          $handle.style.width = startWidth + (e.pageX - startX) + 'px'
-        }
-      })
-      document.addEventListener('mouseup', function (e) {
-        if (pressed) {
-          $table.classList.remove('resizing')
-          pressed = false
-        }
-      })
+    resizeTH (e) {
+      if (pressed) {
+        $handle.style.width = startWidth + (e.pageX - startX) + 'px'
+      }
+    },
+    stopResize (e) {
+      if (pressed) {
+        $table.classList.remove('resizing')
+        pressed = false
+      }
+      event.stopPropagation()
+    },
+    startResize (e) {
+      $handle = e.srcElement
+      pressed = true
+      startX = e.pageX
+      startWidth = $handle.offsetWidth
+      $table = $handle.closest('.q-table')
+      $table.classList.add('resizing')
+    },
+    resetWith () {
       const thList = document.querySelectorAll('.table-resizable th')
       thList.forEach(th => {
-        th.addEventListener('mousedown', function (e) {
-          $handle = this
-          pressed = true
-          startX = e.pageX
-          startWidth = $handle.offsetWidth
-          $table = $handle.closest('.table-resizable')
-          $table.classList.add('resizing')
-        }, true)
-      })
-      document.querySelector('.table-resizable thead').addEventListener('dblclick', function (e) {
-        thList.forEach(th => {
+        if (th.className !== 'unresisible') {
           th.style.width = ''
-        })
+        }
       })
+    },
+    unsetResizable () {
+      document.removeEventListener('mousemove', this.resizeTH)
+      document.removeEventListener('mouseup', this.stopResize)
+      const thList = document.querySelectorAll('.table-resizable th')
+      thList.forEach(th => {
+        if (th.removeEventListener) {
+          th.removeEventListener('mousedown', this.startResize)
+        }
+      })
+    },
+    setResizable () {
+      document.addEventListener('mousemove', this.resizeTH)
+      document.addEventListener('mouseup', this.stopResize)
+      const thList = document.querySelectorAll('.table-resizable th')
+      thList.forEach(th => {
+        if (th.className !== 'unresisible') {
+          th.addEventListener('mousedown', this.startResize)
+        }
+      })
+      document.querySelector('.table-resizable thead').addEventListener('dblclick', this.resetWith)
     }
   },
   props: {
-    resizableColumns: {
-      type: Boolean,
-      default: true
-    },
     separator: {
       type: String
     },
@@ -308,8 +332,7 @@ export default {
 </script>
 
 <style>
-.table-resizable.resizing {
-  cursor: col-resize;
+.table-resizable.resizing  {
   user-select: none;
 }
 .table-resizable th {
