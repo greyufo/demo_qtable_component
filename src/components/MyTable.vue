@@ -10,7 +10,7 @@
       :selected.sync="selectedRows"
       selection="multiple"
       row-key="name"
-      class="table-resizable my-sticky-header-table"
+      :class="className"
       :pagination.sync="pagination"
       hide-pagination
     >
@@ -44,7 +44,7 @@
             <q-avatar  icon = "multiple_stop" color="blue" text-color="white"/>
           </q-item-section>
           <q-item-section>
-            <q-item-label>Включить изменение ширины</q-item-label>
+            <q-item-label>{{onoff}} изменение ширины</q-item-label>
           </q-item-section>
         </q-item>
         <q-separator spaced />
@@ -193,21 +193,23 @@ var startX,
 export default {
   name: 'MyTable',
   data: () => ({
-    selectedRows: [],
-    visibleColumns: [],
-    resizableColumns: false,
+    onoff: 'Включить',
+    selectedRows: [], // список выделенных строк
+    visibleColumns: [], // перечень столбцов для отображения
+    resizableColumns: false, // включается режим изменения ширины столбцов
+    className: 'my-sticky-header-table', // класс для таблицы
     sortable: false,
     filter: '',
-    show_settings: false,
+    show_settings: false, // показать кнопку настройки
     show_dialog: false,
-    deletable: false,
-    selectable: false,
-    icon_check_box: 'check_box',
-    pagination: {
-      sortBy: 'desc',
-      descending: false,
-      page: 2,
-      rowsPerPage: 5
+    deletable: false, // есть возможность удаления, когда выбраны какие-то строки
+    selectable: false, // включается режим выбора строк
+    icon_check_box: 'check_box', // иконка для кнопки включения режима выбора
+    pagination: { // пагинатор
+      sortBy: 'desc', // по какому столбцу сортироать
+      descending: false, // направление
+      page: 2, // какая траница
+      rowsPerPage: 5 // сколько строк на странице
       // rowsNumber: 20
     }
   }),
@@ -217,19 +219,27 @@ export default {
     }
   },
   mounted () {
+    // временно, заполнение списка отображаемых столбцов
     this.visibleColumns = this.columns.map(e => e.name)
   },
   watch: {
     resizableColumns: function (val) {
-      if (val) this.setResizable()
+      if (val) {
+        this.onoff = 'Выключить'
+        this.className += ' table-resizable'
+        this.setResizable()
+      } else {
+        this.onoff = 'Включить'
+        this.className = 'my-sticky-header-table'
+      }
     },
 
     selectedRows: function (val) {
-      this.deletable = val.length > 0
+      this.deletable = val.length > 0 // если выбрана хоть одна строка
     },
     selectable: function (val) {
-      this.icon_check_box = !val ? 'check_box' : 'check_box_outline_blank'
-      if (!val) this.selectedRows = []
+      this.icon_check_box = !val ? 'check_box' : 'check_box_outline_blank' // меняем иконку у кнопки
+      if (!val) this.selectedRows = [] // очищаем выбор
     }
   },
   methods: {
@@ -252,8 +262,7 @@ export default {
       this.selectable = !this.selectable
     },
     onResizible () {
-      this.resizableColumns = true
-      console.log('Изменение столбцов')
+      this.resizableColumns = !this.resizableColumns
     },
     saveSettings () {
       console.log('Сохраняем настройки')
