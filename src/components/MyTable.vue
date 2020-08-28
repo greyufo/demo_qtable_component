@@ -1,9 +1,6 @@
 <template>
 <q-layout view="lhh LpR lff" container style="height: 1080px" class="shadow-1 rounded-borders">
  <q-table
-      dense
-      :sortable = "sortable"
-      :separator='separator'
       :data="data"
       :columns="columns"
       :visible-columns="visibleColumns"
@@ -185,19 +182,19 @@
 </template>
 
 <script>
-var startX,
-  startWidth,
-  $handle,
-  $table,
-  pressed = false
+import bus from '../event-bus'
 export default {
   name: 'MyTable',
   data: () => ({
     onoff: 'Включить',
     selectedRows: [], // список выделенных строк
     visibleColumns: [], // перечень столбцов для отображения
-    resizableColumns: false, // включается режим изменения ширины столбцов
+    sortableColumns: [], // список имен столбцов, которые сортируются
+    resizingColumn: {}, // экземпляр TH, который изменяем
+    enableResizible: false, // Собственно включение или нет ресайзинга
     className: 'my-sticky-header-table', // класс для таблицы
+    startX: 0, // стартовая позиция начала ресайзинга при клике
+    startWidth: 0, // стартовая ширина изменяемого столбца
     sortable: false,
     filter: '',
     show_settings: false, // показать кнопку настройки
@@ -223,14 +220,13 @@ export default {
     this.visibleColumns = this.columns.map(e => e.name)
   },
   watch: {
-    resizableColumns: function (val) {
+    enableResizible: function (val) {
       if (val) {
         this.onoff = 'Выключить'
-        this.className += ' table-resizable'
-        this.setResizable()
+        this.resizeableTable()
       } else {
+        this.unresizeableTable()
         this.onoff = 'Включить'
-        this.className = 'my-sticky-header-table'
       }
     },
 
@@ -245,6 +241,7 @@ export default {
   methods: {
     newItem () {
       console.log('Новая запись')
+      bus.$emit('mcbTableNewItem')
     },
     deleteItem () {
       console.log('Удалить запись')
@@ -262,65 +259,119 @@ export default {
       this.selectable = !this.selectable
     },
     onResizible () {
-      this.resizableColumns = !this.resizableColumns
+      this.enableResizible = !this.enableResizible
     },
     saveSettings () {
       console.log('Сохраняем настройки')
     },
-    resizeTH (e) {
-      if (pressed) {
-        $handle.style.width = startWidth + (e.pageX - startX) + 'px'
+    showNotif (message, color, icon) {
+      this.$q.notify({
+        message,
+        color,
+        icon
+      })
+    },
+    mouseOver (e) {
+      e.srcElement.style.backgroundColor = 'blue'
+    },
+    mouseOut (e) {
+      e.srcElement.style.backgroundColor = 'silver'
+    },
+    mouseUp (e) {
+      this.resizing = false
+    },
+    mouseDown (e) {
+      this.resizingColumn = e.path[1]
+      this.resizing = true
+      this.startWidth = e.path[1].offsetWidth
+      this.startX = e.pageX
+    },
+    mouseMove (e) {
+      if (this.resizing) {
+        this.resizingColumn.style.width = this.startWidth + (e.pageX - this.startX) + 'px'
       }
     },
-    stopResize (e) {
-      if (pressed) {
-        $table.classList.remove('resizing')
-        pressed = false
-      }
-      event.stopPropagation()
+    setListeners (div) {
+      div.addEventListener('mouseover', this.mouseOver) // возможно стилем сделать
+      div.addEventListener('mouseout', this.mouseOut)
+      div.addEventListener('mousedown', this.mouseDown, false)
     },
-    startResize (e) {
-      $handle = e.srcElement
-      pressed = true
-      startX = e.pageX
-      startWidth = $handle.offsetWidth
-      $table = $handle.closest('.q-table')
-      $table.classList.add('resizing')
+    unsetListeners (div) {
+      div.removeEventListener('mouseover', this.mouseOver)
+      div.removeEventListener('mouseout', this.mouseOut)
+      div.removeEventListener('mousedown', this.mouseDown, false)
+    },
+    createDiv (h) {
+      var div = document.createElement('div')
+      div.style.top = 0
+      div.style.right = 0
+      div.style.width = '2px'
+      div.style.position = 'absolute'
+      div.style.cursor = 'col-resize'
+      div.style.userSelect = 'none'
+      div.style.backgroundColor = 'silver'
+      div.style.userSelect = 'none'
+      div.style.height = `${h}px`
+      this.setListeners(div)
+      return div
+    },
+    sortableTable () {
+      this.columns.forEach(el => {
+        el.sortable = this.sortableColumns.includes(el.name)
+      })
+    },
+    unsortableTable () {
+      this.sortableColumns = []
+      this.columns.forEach(el => {
+        if (!(el.sortable === undefined) && (el.sortable)) {
+          this.sortableColumns.push(el.name) // запоминаяем столбцы, которые имели сортировку
+        }
+      })
+      this.columns = this.columns.map(e => {
+        if (e.sortable) e.sortable = false
+        return e
+      })
     },
     resetWith () {
-      const thList = document.querySelectorAll('.table-resizable th')
-      thList.forEach(th => {
-        if (th.className !== 'unresisible') {
-          th.style.width = ''
-        }
-      })
+      const cols = document.querySelectorAll('.q-table th')
+      for (var i = 0; i < cols.length; i++) {
+        cols[i].style.width = ''
+      }
+      this.showNotif('Сброшены изменения ширины столбцов', 'purple')
     },
-    unsetResizable () {
-      document.removeEventListener('mousemove', this.resizeTH)
-      document.removeEventListener('mouseup', this.stopResize)
-      const thList = document.querySelectorAll('.table-resizable th')
-      thList.forEach(th => {
-        if (th.removeEventListener) {
-          th.removeEventListener('mousedown', this.startResize)
+    unresizeableTable () {
+      document.querySelector('.q-table thead').removeEventListener('dblclick', this.resetWith)
+      document.removeEventListener('mousemove', this.mouseMove)
+      document.removeEventListener('mouseup', this.mouseUp)
+      this.sortableTable()
+      const cols = document.querySelectorAll('.q-table th')
+
+      for (var i = 0; i < cols.length; i++) {
+        const divs = cols[i].getElementsByTagName('div')
+        for (var j = 0; j < divs.length; j++) {
+          this.unsetListeners(divs[j])
+          cols[i].removeChild(divs[j])
         }
-      })
+      }
+      this.showNotif('Выключено изменение ширины столбцов', 'red')
     },
-    setResizable () {
-      document.addEventListener('mousemove', this.resizeTH)
-      document.addEventListener('mouseup', this.stopResize)
-      const thList = document.querySelectorAll('.table-resizable th')
-      thList.forEach(th => {
-        if (th.className !== 'unresisible') {
-          th.addEventListener('mousedown', this.startResize)
-        }
-      })
-      document.querySelector('.table-resizable thead').addEventListener('dblclick', this.resetWith)
+    resizeableTable () {
+      this.unsortableTable()
+      document.querySelector('.q-table thead').addEventListener('dblclick', this.resetWith)
+      document.addEventListener('mousemove', this.mouseMove)
+      document.addEventListener('mouseup', this.mouseUp)
+      const table = document.querySelectorAll('.q-table'),
+        cols = document.querySelectorAll('.q-table th')
+      for (var i = 0; i < cols.length; i++) {
+        var div = this.createDiv(table[0].clientHeight)
+        cols[i].style.width = cols[i].clientWidth + 'px'
+        cols[i].appendChild(div)
+        cols[i].style.position = 'relative'
+      }
+      this.showNotif('Включено изменение ширины столбцов', 'green')
     }
   },
   props: {
-    separator: {
-      type: String
-    },
     visColumns:
     {
       type: Array,

@@ -2,7 +2,6 @@
 <div id="q-app">
   <div class="q-pa-md">
     <my-table
-      :separator='separator'
       :data="data"
       :columns="columns"
       row-key="name"
@@ -12,7 +11,7 @@
 </template>
 <script>
 import MyTable from '../components/MyTable'
-
+import bus from '../event-bus'
 export default {
   name: 'MainLayout',
   components: {
@@ -20,7 +19,6 @@ export default {
   },
   data () {
     return {
-      separator: 'vertical',
       columns: [
         {
           name: 'name',
@@ -142,6 +140,14 @@ export default {
         }
       ]
     }
+  },
+  methods: {
+    addItem () {
+      this.$q.notify({ message: 'Новая запись', color: 'blue' })
+    }
+  },
+  created () {
+    bus.$on('mcbTableNewItem', this.addItem)
   }
 }
 </script>
