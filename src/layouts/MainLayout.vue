@@ -147,7 +147,7 @@ export default {
     }
   },
   created () {
-    bus.$on('mcbTableNewItem', this.addItem)
+    bus.$on('myTableNewRecord', this.addItem)
   }
 }
 </script>

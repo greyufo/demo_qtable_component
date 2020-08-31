@@ -38,7 +38,7 @@
         </q-item>
         <q-item clickable v-close-popup @click="onResizible">
           <q-item-section avatar>
-            <q-avatar  icon = "multiple_stop" color="blue" text-color="white"/>
+            <q-avatar  icon = "sync_alt" color="blue" text-color="white"/>
           </q-item-section>
           <q-item-section>
             <q-item-label>{{onoff}} изменение ширины</q-item-label>
@@ -241,7 +241,7 @@ export default {
   methods: {
     newItem () {
       console.log('Новая запись')
-      bus.$emit('mcbTableNewItem')
+      bus.$emit('myTableNewRecord')
     },
     deleteItem () {
       console.log('Удалить запись')
@@ -372,11 +372,7 @@ export default {
     }
   },
   props: {
-    visColumns:
-    {
-      type: Array,
-      default: () => []
-    },
+
     data: {
       type: Array,
       default: () => []
