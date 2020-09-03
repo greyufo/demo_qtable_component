@@ -9,7 +9,7 @@
 </template>
 <script>
 import MyTable from '../components/MyTable'
-import bus from '../event-bus'
+// import bus from '../event-bus'
 export default {
   name: 'Table',
   components: {
@@ -140,12 +140,10 @@ export default {
     }
   },
   methods: {
-    addItem () {
-      this.$q.notify({ message: 'Новая запись', color: 'blue' })
-    }
+
   },
   created () {
-    bus.$on('myTableNewRecord', this.addItem)
+    // bus.$on('myTableNewRecord', this.)
   }
 }
 </script>

@@ -37,7 +37,13 @@ export default {
   },
   data: () => ({
   }),
+  created () {
+    bus.$on('myTableNewRecord', this.newRecord)
+  },
   methods: {
+    newRecord () {
+      this.showDialog = true
+    },
     btnSave () {
       bus.$emit('myTableSaveRecord')
     },
@@ -52,7 +58,6 @@ export default {
         component: MyDialog,
         message: 'Удаляем запись?'
       }).onOk(() => {
-        console.log('delete')
         bus.$emit('myTableDeleteRecord')
       })
     }
