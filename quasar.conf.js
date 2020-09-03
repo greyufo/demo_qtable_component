@@ -95,7 +95,7 @@ module.exports = function (/* ctx */) {
 
       // Quasar plugins
       plugins: [
-
+        'Dialog',
         'Notify'
       ]
     },

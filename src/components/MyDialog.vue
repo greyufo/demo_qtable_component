@@ -1,15 +1,18 @@
 <template>
   <q-dialog ref="dialog" @hide="onDialogHide">
     <q-card class="q-dialog-plugin">
-      <!--
-        ...content
-        ... use q-card-section for it?
-      -->
+        <q-toolbar class="bg-grey-3">
+        <q-icon :name="icon" class="text-red" style="font-size: 2rem;"></q-icon>
 
-      <!-- buttons example -->
+          <q-toolbar-title><span class="text-weight-bold">{{title}}</span></q-toolbar-title>
+        </q-toolbar>
+
+        <q-card-section>
+          {{message}}
+        </q-card-section>
       <q-card-actions align="right">
-        <q-btn color="primary" label="Да" @click="onOKClick" />
-        <q-btn color="primary" label="Нет" @click="onCancelClick" />
+        <q-btn  flat color="positive" label="Да" @click="onOKClick" />
+        <q-btn flat color="negative" label="Нет" @click="onCancelClick" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -17,8 +20,20 @@
 
 <script>
 export default {
+  name: 'MyDialog',
   props: {
-    // ...your custom props
+    title: {
+      type: String,
+      default: 'Внимание!'
+    },
+    icon: {
+      type: String,
+      default: 'warning'
+    },
+    message: {
+      type: String,
+      default: ''
+    }
   },
 
   methods: {
@@ -33,7 +48,6 @@ export default {
     hide () {
       this.$refs.dialog.hide()
     },
-
     onDialogHide () {
       // required to be emitted
       // when QDialog emits "hide" event

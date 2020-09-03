@@ -17,8 +17,8 @@
 
     <q-drawer v-model="left" side="left" bordered>
     </q-drawer>
-    <my-drawer :showDialog="right"/>
-    <q-page-container>
+    <my-drawer :showDialog="right" title="Новый пользователь"/>
+    <q-page-container class="flex flex-center">
       <router-view />
     </q-page-container>
 

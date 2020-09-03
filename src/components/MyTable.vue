@@ -18,6 +18,7 @@
             </template>
           </q-input>
   </template>
+  jhjhjh
   <template v-slot:top-right>
   <q-btn color="secondary" icon="add" @click='newItem' label="Добавить" />
    <q-btn-dropdown
