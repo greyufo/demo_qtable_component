@@ -19,12 +19,35 @@ var routes = [{
     });
   }
 }, {
-  path: '/2',
+  path: '/',
   component: function component() {
     return Promise.resolve().then(function () {
       return (0, _interopRequireWildcard2.default)(require('layouts/DrawerLayout.vue'));
     });
-  }
+  },
+  children: [{
+    path: '2',
+    component: function component() {
+      return Promise.resolve().then(function () {
+        return (0, _interopRequireWildcard2.default)(require('pages/Table.vue'));
+      });
+    }
+  }]
+}, {
+  path: '/',
+  component: function component() {
+    return Promise.resolve().then(function () {
+      return (0, _interopRequireWildcard2.default)(require('layouts/DrawerLayout.vue'));
+    });
+  },
+  children: [{
+    path: 'login',
+    component: function component() {
+      return Promise.resolve().then(function () {
+        return (0, _interopRequireWildcard2.default)(require('pages/Login.vue'));
+      });
+    }
+  }]
 }, // Always leave this as last one,
 // but you can also remove it
 {

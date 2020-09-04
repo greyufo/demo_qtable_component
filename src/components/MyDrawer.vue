@@ -39,8 +39,15 @@ export default {
   }),
   created () {
     bus.$on('myTableNewRecord', this.newRecord)
+    document.addEventListener('keyup', this.closeDrawer)
   },
   methods: {
+    closeDrawer (e) {
+      if (e.keyCode === 27) {
+        this.showDialog = false
+      }
+    },
+
     newRecord () {
       this.showDialog = true
     },
