@@ -4,14 +4,19 @@
 
     <q-header elevated class="bg-primary text-white">
       <q-toolbar>
-        <q-btn dense flat round icon="menu" @click="left = !left" />
-
+        <q-btn
+        dense
+        flat
+        round icon="menu"
+        @click="left = !left" />
         <q-toolbar-title>
-
           Пример таблицы
         </q-toolbar-title>
-
-        <q-btn dense flat round icon="menu" @click="right = !right" />
+        <q-btn
+        dense
+        flat
+        :icon="fullscreen ? 'fullscreen_exit' : 'fullscreen'"
+        @click="toggleFullscreen" />
       </q-toolbar>
     </q-header>
 
@@ -25,7 +30,6 @@
     <q-footer elevated class="bg-grey-8 text-white">
       <q-toolbar>
         <q-toolbar-title>
-
           Пример
         </q-toolbar-title>
       </q-toolbar>
@@ -44,10 +48,14 @@ export default {
   data: () => ({
 
     left: false,
-    right: false
+    right: false,
+    fullscreen: () => this.$q.fullscreen.isActive
 
   }),
   methods: {
+    toggleFullscreen () {
+      this.$q.fullscreen.toggle()
+    },
     saveRecord () {
       this.right = false
       this.$q.notify({ message: 'Запись сохранена', color: 'green' })
